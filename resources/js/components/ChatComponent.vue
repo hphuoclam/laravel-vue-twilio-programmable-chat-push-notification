@@ -25,6 +25,9 @@
 </template>
 
 <script>
+
+import { handleFcmToken } from "../firebase";
+
 export default {
     name: "ChatComponent",
     props: {
@@ -66,13 +69,22 @@ export default {
                 client.updateToken(token);
             });
 
-            this.channel = await client.getChannelByUniqueName(
-                `${this.authUser.id}-${this.otherUser.id}`
-            );
+            try {
+                const ids = `${this.authUser.id}-${this.otherUser.id}`;
+                this.channel = await client.getChannelByUniqueName(ids);
+            } catch (error) {
+                const reverse_ids = `${this.otherUser.id}-${this.authUser.id}`;
+                this.channel = await client.getChannelByUniqueName(reverse_ids);
+            }
+
+
+            console.log('===this.channel', this.channel)
 
             this.channel.on("messageAdded", message => {
                 this.messages.push(message);
             });
+
+            handleFcmToken(client);
         },
         async fetchMessages() {
             this.messages = (await this.channel.getMessages()).items;

@@ -20,6 +20,7 @@ class TokenController extends Controller
 
         $chatGrant = new ChatGrant();
         $chatGrant->setServiceSid(env('TWILIO_SERVICE_SID'));
+        $chatGrant->setPushCredentialSid(env('TWILIO_PUSH_CREDENTIAL_SID'));
 
         $token->addGrant($chatGrant);
 

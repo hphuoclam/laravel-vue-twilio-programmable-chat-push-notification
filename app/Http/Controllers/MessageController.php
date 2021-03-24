@@ -24,6 +24,10 @@ class MessageController extends Controller
     {
         $authUser = $request->user();
 
+        $ids_arr = explode('-', $ids);
+
+        $reverse_ids = $ids_arr[1] .'-'. $ids_arr[0];
+
         $otherUser = User::find(explode('-', $ids)[1]);
         $users = User::where('id', '<>', $authUser->id)->get();
 
@@ -35,38 +39,26 @@ class MessageController extends Controller
                 ->channels($ids)
                 ->fetch();
         } catch (\Twilio\Exceptions\RestException $e) {
-            $channel = $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
-                ->channels
-                ->create([
-                    'uniqueName' => $ids,
-                    'type' => 'private',
-                ]);
-        }
-
-        // Add first user to the channel
-        try {
-            $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
-                ->channels($ids)
-                ->members($authUser->email)
-                ->fetch();
-        } catch (\Twilio\Exceptions\RestException $e) {
-            $member = $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
-                ->channels($ids)
-                ->members
-                ->create($authUser->email);
-        }
-
-        // Add second user to the channel
-        try {
-            $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
-                ->channels($ids)
-                ->members($otherUser->email)
-                ->fetch();
-        } catch (\Twilio\Exceptions\RestException $e) {
-            $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
-                ->channels($ids)
-                ->members
-                ->create($otherUser->email);
+            try {
+                $channel = $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
+                    ->channels($reverse_ids)
+                    ->fetch();
+            } catch (\Twilio\Exceptions\RestException $e) {
+                $channel = $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
+                    ->channels
+                    ->create([
+                        'uniqueName' => $ids,
+                        'type' => 'private',
+                    ]);
+                $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
+                    ->channels($channel->sid)
+                    ->members
+                    ->create($authUser->email);
+                $twilio->chat->v2->services(env('TWILIO_SERVICE_SID'))
+                    ->channels($channel->sid)
+                    ->members
+                    ->create($otherUser->email);
+            }
         }
 
         return view('messages.chat', compact('users', 'otherUser'));
