@@ -1,4 +1,5 @@
-# laravel-vue-twilio-programmable-chat-push-notification
+## Laravel chat with Twilio example
+# Use twilio SDK and use google firebase cloud message to push notification
 
 https://www.twilio.com/docs/chat/javascript/push-notifications-web
 
